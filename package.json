@@ -30,6 +30,7 @@
       "renderer/**/*",
       "scripts/**/*",
       "assets/**/*",
+      "!assets/icon-cache/**",
       "config.json"
     ],
     "win": {
