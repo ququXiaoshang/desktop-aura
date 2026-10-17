@@ -7,7 +7,10 @@ Electron 33 + 原生 HTML/CSS/JS，无前端框架。当前版本 **0.2.0**。
 
 1. **读 `HANDOFF.md`** —— 当前进度、卡点、下一步。不要凭本文件猜进度。
 2. git 在 `C:\Users\LENOVO\.dsh\tools\mingit\cmd\git.exe`，**PATH 里没有 git**，直接敲 `git` 会报「无法识别」。
-3. 先跑一次 `pnpm start` 确认能启动，再动手改。
+3. 改之前先 `git status` 确认工作区干净，这样改坏了能一把 `git checkout .` 回退。
+
+> ⚠️ **`pnpm start` 会隐藏系统桌面图标、接管整个桌面**（这是产品本身的正常行为）。
+> 不要在用户不在场或没同意的情况下跑它，尤其别在自动化流程里跑。
 
 ## 命令
 
