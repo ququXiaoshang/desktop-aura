@@ -26,6 +26,11 @@ $stagingApp = Join-Path $staging $folderName
 New-Item -ItemType Directory -Force -Path $staging | Out-Null
 Copy-Item -Path $src -Destination $stagingApp -Recurse -Force
 
+# Ship the one-click restore helper at the archive root (works even if the app cannot start).
+Get-ChildItem -Path $root -File -Filter *.bat | ForEach-Object { Copy-Item $_.FullName -Destination $stagingApp -Force }
+$restoreSrc = Join-Path $root 'scripts\restore-all.ps1'
+if (Test-Path $restoreSrc) { Copy-Item $restoreSrc -Destination $stagingApp -Force }
+
 if (Test-Path $zipPath) { Remove-Item $zipPath -Force }
 Compress-Archive -Path $stagingApp -DestinationPath $zipPath -CompressionLevel Optimal
 

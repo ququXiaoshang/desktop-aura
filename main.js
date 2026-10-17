@@ -506,6 +506,24 @@ function applyAuraMode(enabled) {
   }
 }
 
+// 彻底还原：交给独立脚本恢复系统图标 + 清自启，然后退出（异常场景也能靠 还原桌面.bat 手动还原）
+function restoreEverythingAndQuit() {
+  systemIconsHidden = false;
+  try {
+    const cfg = loadConfig();
+    cfg.autostart = false;
+    fs.writeFileSync(getUserConfigPath(), JSON.stringify(cfg, null, 2));
+  } catch { /* 忽略 */ }
+  execFile(POWERSHELL,
+    ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', path.join(SCRIPTS_DIR, 'restore-all.ps1')],
+    { windowsHide: true },
+    (err, stdout, stderr) => {
+      if (err) console.error('[restore-all] 失败:', (stderr || err.message).trim());
+      else console.log('[restore-all]', (stdout || '').trim());
+      app.quit();
+    });
+}
+
 /* ---------- 设置面板 ---------- */
 
 function openSettings() {
@@ -563,6 +581,7 @@ function createTray() {
     },
     { label: '窗口置底', click: () => { if (mainWindow) { mainWindow.moveBottom(); mainWindow.setAlwaysOnTop(false); } } },
     { label: '设置…', click: () => openSettings() },
+    { label: '彻底还原系统桌面并退出', click: () => restoreEverythingAndQuit() },
     { type: 'separator' },
     { label: '退出', click: () => app.quit() },
   ]);
