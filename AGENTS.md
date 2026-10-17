@@ -55,6 +55,7 @@ assets/icon-cache/   图标缓存（生成物，已在 .gitignore）
 | `getFileIcon(.lnk)` | 拿不到真实图标 → 先解析 .lnk 目标再提取 |
 | 中文路径 | 编码问题 → 统一 UTF-8 |
 | 开机自启 | 测试任务计划方案时误删过 Run 键 → 只动 `HKCU\...\Run`，别碰任务计划 |
+| 广播 `WM_SETTINGCHANGE`/`SHChangeNotify` 隐藏桌面图标 | **隐藏生效、恢复失效**（切不回原生）→ 不可靠，别用；要隐藏图标就重启 explorer |
 
 ## 不要动
 
