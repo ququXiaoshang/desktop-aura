@@ -31,6 +31,9 @@ Get-ChildItem -Path $root -File -Filter *.bat | ForEach-Object { Copy-Item $_.Fu
 $restoreSrc = Join-Path $root 'scripts\restore-all.ps1'
 if (Test-Path $restoreSrc) { Copy-Item $restoreSrc -Destination $stagingApp -Force }
 
+# Ship the end-user manual at the archive root (skip developer docs).
+Get-ChildItem -Path $root -File -Filter *.md | Where-Object { $_.Name -notmatch '^(README|AGENTS|HANDOFF)' } | ForEach-Object { Copy-Item $_.FullName -Destination $stagingApp -Force }
+
 if (Test-Path $zipPath) { Remove-Item $zipPath -Force }
 Compress-Archive -Path $stagingApp -DestinationPath $zipPath -CompressionLevel Optimal
 

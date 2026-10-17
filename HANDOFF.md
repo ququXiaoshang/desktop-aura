@@ -70,4 +70,4 @@
 - **2026-10-17（阶段 B 起步）**：决策「开机默认原生 + 托盘切灵动」保持现状（不改 `main.js`）；清理 dist 打包残留（`_1` 文件已不存在，修复 `assets/icon-cache/**` 生成物被误打包 —— `package.json` 的 `build.files` 加排除项并删除 dist 内误打包副本）。
 - **2026-10-17（切模式延迟优化 → 已回滚，搁置）**：尝试 `hide-icons.ps1` 广播刷新替代重启 explorer，**隐藏生效但恢复失效（切不回原生）**，回滚到重启 explorer 稳定版；`main.js` 白屏修复（透明背景色 + 延迟 `showInactive`）保留。切模式延迟 / 任务栏消失 / 流畅度决定**以后再做**。
 - **2026-10-17（可移植分发）**：新增 `scripts/zip-release.ps1` + `pnpm release`，把绿色版压成单个 zip 分发；README 补「部署到其他电脑」（普通用户 / 开发机两条路径）、去掉写死的本机路径；`.gitignore` 加 `release/`。
-- **2026-10-17（安全兜底）**：新增 `scripts/restore-all.ps1` + 根目录 `还原桌面.bat`（应用没开也能一键还原：显示系统图标 + 清 `FWF_NOICONS` + 删自启 + 重启 explorer）；托盘加「彻底还原系统桌面并退出」。`zip-release.ps1` 会把还原入口一起打进 zip。
+- **2026-10-17（安全兜底）**：新增 `scripts/restore-all.ps1` + 根目录 `还原桌面.bat`（应用没开也能一键还原：显示系统图标 + 清 `FWF_NOICONS` + 删自启 + 重启 explorer）；托盘加「彻底还原系统桌面并退出」。`zip-release.ps1` 会把还原入口一起打进 zip。另加 `使用说明.md` 随包分发。
