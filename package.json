@@ -1,0 +1,37 @@
+{
+  "name": "desktop-aura",
+  "productName": "灵动桌面Aura",
+  "version": "0.2.0",
+  "description": "Windows 桌面美化工具：图标上浮、收纳分组、毛玻璃、设置面板",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win portable"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.0.0"
+  },
+  "build": {
+    "appId": "com.aura.desktop",
+    "productName": "灵动桌面Aura",
+    "asar": false,
+    "electronDist": "node_modules/electron/dist",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "renderer/**/*",
+      "scripts/**/*",
+      "assets/**/*",
+      "config.json"
+    ],
+    "win": {
+      "target": "portable",
+      "icon": "assets/icon.ico"
+    }
+  }
+}

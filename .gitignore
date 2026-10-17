@@ -1,0 +1,12 @@
+# 依赖
+node_modules/
+
+# 构建产物（绿色版 exe 在这里）
+dist/
+
+# 图标缓存（37 个 png，运行时自动重建）
+assets/icon-cache/
+
+# 日志与临时文件
+*.log
+*.tmp

@@ -1,0 +1,225 @@
+/* 灵动桌面 Aura - 渲染层样式（复刻 Windows 桌面图标布局） */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* 这些变量由 renderer.js 根据系统注册表 + config.json 动态写入 */
+:root {
+  --icon-size: 48px;
+  --cell-w: 75px;
+  --cell-h: 75px;
+  --offset-x: 8px;
+  --offset-y: 8px;
+  --lift-y: -10px;
+  --hover-scale: 1.07;
+  --hover-duration: 0.28s;
+  --hover-easing: cubic-bezier(0.22, 1.4, 0.36, 1);
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  background: transparent;      /* 透出桌面壁纸 */
+  overflow: hidden;
+  user-select: none;
+  font-family: "Microsoft YaHei UI", "Microsoft YaHei", "Segoe UI", sans-serif;
+}
+
+/* 图标网格容器：覆盖全屏，内部元素各自定位 */
+#icon-grid {
+  position: absolute;
+  inset: 0;
+}
+
+/* 未分组图标：左上角起、竖排、列满后向右换列（和 Windows 桌面一致） */
+.ungrouped {
+  position: absolute;
+  top: var(--offset-y);
+  left: var(--offset-x);
+  height: calc(100% - 2 * var(--offset-y));
+  display: flex;
+  flex-direction: column;
+  flex-wrap: wrap;
+  align-content: flex-start;
+}
+
+/* 单个图标：占一个固定格子（大小 = 系统图标间距） */
+.icon {
+  position: relative;
+  width: var(--cell-w);
+  height: var(--cell-h);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding-top: 3px;
+  gap: 2px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition:
+    transform var(--hover-duration) var(--hover-easing),
+    background-color 0.2s ease,
+    box-shadow var(--hover-duration) ease;
+  transform: translateY(0);
+  will-change: transform;
+}
+
+/* 悬停：上浮 + 轻微放大 + 半透明底 */
+.icon:hover {
+  transform: translateY(var(--lift-y)) scale(var(--hover-scale));
+  background-color: rgba(255, 255, 255, 0.10);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.18);
+}
+
+/* 毛玻璃：hover 时显示壁纸对应位置的模糊背景 */
+.icon:hover::before {
+  content: '';
+  position: absolute;
+  inset: -8px;
+  border-radius: 16px;
+  background-image: var(--wallpaper, none);
+  background-size: 100vw 100vh;
+  background-position: var(--bg-x, 0) var(--bg-y, 0);
+  filter: blur(14px) saturate(1.25);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.icon:hover .icon-img,
+.icon:hover .icon-label {
+  position: relative;
+  z-index: 1;
+}
+
+.icon-img {
+  width: var(--icon-size);
+  height: var(--icon-size);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-img img {
+  width: var(--icon-size);
+  height: var(--icon-size);
+  object-fit: contain;
+  transition: filter var(--hover-duration) ease;
+  pointer-events: none;
+}
+
+.icon:hover .icon-img img {
+  filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.4));
+}
+
+/* 图标名：白字 + 阴影，最多两行（和系统一致） */
+.icon-label {
+  width: calc(var(--cell-w) - 4px);
+  font-size: 12px;
+  line-height: 1.2;
+  color: #fff;
+  text-align: center;
+  text-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.9),
+    0 0 6px rgba(0, 0, 0, 0.6);
+  word-break: break-all;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* 无图标时的占位块 */
+.icon-img.no-icon {
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+}
+
+/* ===== 分组盒子（收纳，绝对定位） ===== */
+.group-box {
+  position: absolute;
+  background: rgba(28, 32, 45, 0.42);
+  border-radius: 12px;
+  padding: 6px 8px 8px;
+  min-width: 120px;
+  max-width: 60vw;
+}
+
+.group-header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: rgba(255, 255, 255, 0.94);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 2px 6px 6px;
+  cursor: pointer;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+.group-header .caret {
+  display: inline-block;
+  transition: transform 0.2s ease;
+}
+
+.group-box.collapsed .caret {
+  transform: rotate(-90deg);
+}
+
+.group-header .count {
+  color: rgba(255, 255, 255, 0.55);
+  font-weight: 400;
+  margin-left: 2px;
+}
+
+.group-body {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.group-box.collapsed .group-body {
+  display: none;
+}
+
+/* ===== 拖拽相关 ===== */
+.icon.dragging {
+  opacity: 0.5;
+}
+
+.group-box.drop-target {
+  background: rgba(94, 107, 255, 0.45);
+  box-shadow: 0 0 0 2px rgba(94, 107, 255, 0.6);
+}
+
+.group-name-input {
+  width: 90px;
+  font-size: 12px;
+  padding: 2px 4px;
+  border: 1px solid #5e6bff;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.95);
+  color: #1f2430;
+  outline: none;
+}
+
+/* 新建组按钮 */
+.new-group-btn {
+  position: absolute;
+  right: 24px;
+  top: 24px;
+  padding: 8px 14px;
+  background: rgba(28, 32, 45, 0.5);
+  color: #fff;
+  font-size: 13px;
+  border-radius: 10px;
+  cursor: pointer;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+  transition: background 0.2s ease;
+}
+
+.new-group-btn:hover {
+  background: rgba(94, 107, 255, 0.6);
+}

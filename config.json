@@ -1,0 +1,16 @@
+{
+  "hover": {
+    "liftY": 10,
+    "scale": 1.07,
+    "duration": 0.28,
+    "easing": "cubic-bezier(0.22, 1.4, 0.36, 1)"
+  },
+  "icons": {
+    "offsetX": 8,
+    "offsetY": 8
+  },
+  "groups": [
+    { "name": "开发工具", "match": ["code", "visual studio", "finalshell", "git", "python"] },
+    { "name": "游戏", "match": ["steam", "game"] }
+  ]
+}
