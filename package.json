@@ -6,7 +6,8 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "dist": "electron-builder --win portable"
+    "dist": "electron-builder --win portable",
+    "release": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/zip-release.ps1"
   },
   "license": "MIT",
   "engines": {

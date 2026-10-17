@@ -90,7 +90,7 @@ desktop-aura/
 ### 开发模式
 
 ```powershell
-cd C:\Users\LENOVO\desktop-aura
+cd desktop-aura
 pnpm install     # 首次安装依赖（使用 pnpm，不要用 npm）
 pnpm start       # 启动
 ```
@@ -101,6 +101,28 @@ pnpm start       # 启动
 
 > 启动后默认是**原生桌面**，托盘勾选「启用灵动桌面」才切换到灵动桌面。
 > 退出应用时会自动恢复系统桌面图标，不会让桌面变空。
+
+### 部署到其他电脑
+
+项目已可移植：代码不含本机绝对路径，用户数据自动生成到 `%APPDATA%\灵动桌面Aura`，目标机器只需 **Windows x64**，无需任何开发环境。
+
+**A. 给普通用户（推荐，无需 Node / pnpm / git）**
+
+1. 本机打包：`pnpm dist` 生成绿色版，再 `pnpm release` 压成一个 zip。
+2. 产物在 `release\desktop-aura-<版本>-win-x64.zip`，发给对方。
+3. 对方解压后双击 `灵动桌面Aura.exe` 即可，无需安装任何东西。
+
+> 首次勾选「启用灵动桌面」会重启一次资源管理器（约 2–3 秒），属正常现象。
+
+**B. 给开发机（需要改代码 / 源码运行）**
+
+```powershell
+cd desktop-aura
+pnpm install   # 用 pnpm，不要 npm；Electron 走 .npmrc 国内镜像
+pnpm start
+```
+
+> 注意：`dist/`、`node_modules/`、`release/` 都是生成物、不提交 git。换机器请用上面的 zip 分发产物，或在新机器上 `pnpm install` 重新构建。
 
 ---
 
