@@ -381,6 +381,7 @@ function createWindow() {
   mainWindow = new BrowserWindow({
     x, y, width, height,
     transparent: true,      // 透明窗口
+    backgroundColor: '#00000000',  // 透明底色，避免首次 showInactive 前内容未合成时闪白屏
     frame: false,           // 无边框
     resizable: false,
     movable: false,
@@ -485,9 +486,18 @@ function setAutoStart(enabled) {
 function applyAuraMode(enabled) {
   systemIconsHidden = enabled;
   if (enabled) {
-    // 立即显示灵动窗口：先用 show 强制渲染（避免 showInactive 被后台节流导致壁纸白屏），再转回不激活
-    if (mainWindow && !mainWindow.isVisible()) mainWindow.show();
-    if (mainWindow) mainWindow.showInactive();
+    // 立即显示灵动窗口：首次先用 show 强制渲染透明内容，延迟再转回不激活，
+    // 避免 showInactive 被后台节流、透明合成没跟上导致的白屏
+    if (mainWindow) {
+      if (!mainWindow.isVisible()) {
+        mainWindow.show();
+        setTimeout(() => {
+          if (mainWindow && !mainWindow.isDestroyed()) mainWindow.showInactive();
+        }, 160);
+      } else {
+        mainWindow.showInactive();
+      }
+    }
     setSystemIconsVisible(false);
   } else {
     // 先隐藏灵动窗口，再恢复系统图标
