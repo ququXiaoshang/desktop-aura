@@ -60,3 +60,4 @@
 ## 会话记录
 
 - **2026-10-17**：阶段 A 收尾。整理 `AGENTS.md` / `HANDOFF.md`，归档 `docs/第一阶段工程总结.md`，初始化 git 仓库并首次提交。
+- **2026-10-17（规范化）**：补 `LICENSE`(MIT) / `.editorconfig` / `.gitattributes`，`package.json` 加 `engines`，`README.md` 全面重写对齐实际功能（分组已为显式归属、默认原生模式、pnpm）。
