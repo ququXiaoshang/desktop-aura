@@ -29,6 +29,7 @@ let settings = {
 let systemIconsHidden = false;
 let settingsWindow = null;
 let autoStartEnabled = false;
+let overlayShownOnce = false;
 
 /* ---------- 单实例锁：防止重复启动导致桌面覆盖层叠加 ---------- */
 const gotLock = app.requestSingleInstanceLock();
@@ -397,6 +398,7 @@ function createWindow() {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false,
+      backgroundThrottling: false,   // 隐藏时也持续渲染，避免首次显示图标没画出来
     },
   });
 
@@ -407,7 +409,16 @@ function createWindow() {
   mainWindow.loadFile(path.join(__dirname, 'renderer', 'index.html'));
 
   mainWindow.once('ready-to-show', () => {
-    // 默认保持隐藏，等用户勾选「启用灵动桌面」再显示
+    // 预热合成器：以 0 透明度 show 一次再隐藏，避免首次切换「启用灵动桌面」时白屏
+    mainWindow.setOpacity(0);
+    mainWindow.show();
+    setTimeout(() => {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.showInactive();
+        mainWindow.hide();
+        mainWindow.setOpacity(1);
+      }
+    }, 250);
   });
 
   mainWindow.on('closed', () => { mainWindow = null; });
@@ -492,7 +503,14 @@ function applyAuraMode(enabled) {
       if (!mainWindow.isVisible()) {
         mainWindow.show();
         setTimeout(() => {
-          if (mainWindow && !mainWindow.isDestroyed()) mainWindow.showInactive();
+          if (mainWindow && !mainWindow.isDestroyed()) {
+            mainWindow.showInactive();
+            // 首次显示时强制重渲染一次，避免开机第一次切换图标还没渲染出来（空桌面）
+            if (!overlayShownOnce) {
+              overlayShownOnce = true;
+              mainWindow.webContents.send('icons-updated', iconsData);
+            }
+          }
         }, 160);
       } else {
         mainWindow.showInactive();

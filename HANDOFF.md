@@ -1,6 +1,6 @@
 # 交接快照
 
-> 更新于 **2026-10-17** ｜ 版本 0.2.0 ｜ 阶段 A 已完成
+> 更新于 **2026-10-19** ｜ 版本 0.2.0 ｜ 阶段 A + 切换流畅度优化完成
 > 规矩：每完成一个能验证的里程碑，就更新本文档顶部日期 + 「下一步第一件事」，然后 commit 一次。
 
 ## 一句话现状
@@ -8,7 +8,7 @@
 阶段 A 全部完成。绿色版 `dist\win-unpacked\灵动桌面Aura.exe` 双击可用，启动约 0.5–0.6 秒。
 唯一大项——单文件 exe 打包——因网络原因卡住，当前用绿色版目录分发。
 新增 `pnpm release`：把绿色版一键压成 `release\desktop-aura-<版本>-win-x64.zip`，可直接分发到其他 Windows x64 电脑（零依赖）。
-切模式优化（不重启 explorer）已试失败并回滚，切模式仍走重启 explorer（2–3s 延迟 + 任务栏闪一下），此问题搁置。
+切模式优化已完成：改用 `ShowWindow` 隐藏/显示桌面 `SysListView32`（参考开源项目 KONEWS/DesktopIconToggle），不再重启 explorer —— 秒切、无白屏、任务栏不丢；注册表+重启 explorer 仅作兜底。
 
 ## 已验证可用（能跑过）
 
@@ -22,6 +22,8 @@
 - [x] 壁纸毛玻璃：hover 时显示壁纸对应区域的模糊背景
 - [x] 开机自启：注册表 Run 键 + 启动自检恢复
 - [x] 性能：图标/壁纸/解析/参数 四类缓存 + 启动并行化（2–4s → 0.5–0.6s）
+- [x] 切换流畅：`ShowWindow` 免重启 explorer 切换（秒切、无白屏、任务栏不丢）
+- [x] 首显就绪：窗口预热 + `backgroundThrottling:false`，开机第一次切换图标即正常
 
 ## 未完成 / 卡住
 
@@ -37,7 +39,7 @@
 2. **单文件 exe 打包** — 已留到阶段 B，换正常网络后一条命令（见「未完成 / 卡住」）。
 3. **远程仓库 + Releases** — 建 Git 远端（GitHub/Gitee）并承载分发 zip，供公开分发；待定平台与地址。
 
-> 已搁置（2026-10-17）：**切模式延迟 / 任务栏消失 / 流畅度** —— 广播刷新方案隐藏生效、恢复失效（切不回原生），已回滚到重启 explorer 稳定版；以后有空再研究可靠的不重启 explorer 方案。
+> 已解决（2026-10-19）：**切模式延迟 / 任务栏消失 / 流畅度** —— 改用 `ShowWindow` 隐藏桌面 `SysListView32`（参考 KONEWS/DesktopIconToggle），不再重启 explorer；广播刷新方案彻底弃用。
 
 > 已决策（2026-10-17）：开机默认「原生桌面」、由用户在托盘勾选切「灵动桌面」，**不做**「双击直接进灵动」。
 > 已清理（2026-10-17）：dist 打包残留 —— `_1` 文件已消失；修复 `assets/icon-cache/**` 生成物被误打包（`package.json` 的 `build.files` 加排除项，并删除 dist 内误打包副本）。
@@ -46,7 +48,6 @@
 
 | 问题 | 说明 |
 |---|---|
-| 切灵动模式 2–3 秒延迟 | 重启 explorer 的代价；广播刷新方案已试失败（恢复方向失效） |
 | 自启项可能被安全软件清理 | 有自检恢复，但需要应用先启动过一次才能补回 |
 | 多屏未适配 | 只覆盖主屏，副屏不显示 |
 | 动态壁纸下的毛玻璃 | 用静态备份图，与实时画面略有差异 |
@@ -61,7 +62,7 @@
 | `renderer/renderer.js` | 覆盖层渲染 / 分组 / 命中检测 / 毛玻璃定位 |
 | `renderer/settings.js` | 设置面板逻辑 + 实时预览 |
 | `config.json` | 用户配置：hover / icons / groups |
-| `scripts/hide-icons.ps1` | 隐藏、显示系统桌面图标 |
+| `scripts/hide-icons.ps1` | 隐藏/显示系统桌面图标（ShowWindow 优先，注册表+重启 explorer 兜底） |
 
 ## 会话记录
 
@@ -71,3 +72,4 @@
 - **2026-10-17（切模式延迟优化 → 已回滚，搁置）**：尝试 `hide-icons.ps1` 广播刷新替代重启 explorer，**隐藏生效但恢复失效（切不回原生）**，回滚到重启 explorer 稳定版；`main.js` 白屏修复（透明背景色 + 延迟 `showInactive`）保留。切模式延迟 / 任务栏消失 / 流畅度决定**以后再做**。
 - **2026-10-17（可移植分发）**：新增 `scripts/zip-release.ps1` + `pnpm release`，把绿色版压成单个 zip 分发；README 补「部署到其他电脑」（普通用户 / 开发机两条路径）、去掉写死的本机路径；`.gitignore` 加 `release/`。
 - **2026-10-17（安全兜底）**：新增 `scripts/restore-all.ps1` + 根目录 `还原桌面.bat`（应用没开也能一键还原：显示系统图标 + 清 `FWF_NOICONS` + 删自启 + 重启 explorer）；托盘加「彻底还原系统桌面并退出」。`zip-release.ps1` 会把还原入口一起打进 zip。另加 `使用说明.md` 随包分发。
+- **2026-10-19（切换流畅度 → 彻底解决）**：调研开源项目 [KONEWS/DesktopIconToggle](https://github.com/KONEWS/DesktopIconToggle)，确认不重启 explorer 的正道是 `ShowWindow` 隐藏桌面 `SysListView32`（注册表方案会**销毁** ListView，两者不能混用）。改动：`hide-icons.ps1` 改为「ShowWindow 优先 + 注册表兜底」；`main.js` 加窗口预热（0 透明度 show 一次防白屏）+ `backgroundThrottling:false`（首显图标即就绪）+ 首次显示强制重渲染。效果：切模式秒切、无白屏、任务栏不丢、开机第一次切换即正常。附带：新增 `scripts/test-showwindow.ps1`（诊断用）。

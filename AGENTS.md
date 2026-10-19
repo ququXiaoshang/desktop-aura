@@ -43,7 +43,7 @@ assets/icon-cache/   图标缓存（生成物，已在 .gitignore）
 
 - **渲染层不许 `require` Node 模块**，只能走 preload 暴露的接口；加 IPC 要同步改 `preload.js` 白名单。
 - **`config.json` 是用户数据**：字段只增、不改名、不删。旧配置必须能直接读，迁移逻辑放 `migrateGroups()`。
-- **PowerShell 脚本一律 UTF-8**（中文路径和中文快捷方式名是常态）。
+- **PowerShell 脚本一律 UTF-8**（中文路径和中文快捷方式名是常态）。**被 `powershell.exe 5.1 -File` 调用的功能性脚本保持纯 ASCII**：5.1 把无 BOM 的 .ps1 按 ANSI(GBK) 读，中文注释/字符串会乱码；只有手动跑的诊断脚本可带中文。
 - **`productName` 不要随手改** —— 它决定 `%APPDATA%\<productName>` 路径，改了单实例锁会分裂。
 
 ## 不要重复踩的坑（都真实踩过）
@@ -51,11 +51,12 @@ assets/icon-cache/   图标缓存（生成物，已在 .gitignore）
 | 坑 | 结论 |
 |---|---|
 | 用 `SetParent` 贴到 WorkerW | 会被 Electron 重置 → 用 `showInactive` 顶级窗口 |
-| 用 `ShowWindow` 隐藏系统图标 | 会破坏图标列表（ListView）→ 用 `HideIcons` 注册表 + `FWF_NOICONS` + 重启 explorer |
+| 用 `ShowWindow` 隐藏系统图标 | **可行，现在是主方案**：对 `SHELLDLL_DefView` 下的 `SysListView32` 做 SW_HIDE/SW_SHOW，秒切、不重启 explorer。旧结论「破坏列表」是因为之前先用注册表方案销毁了 ListView，再 ShowWindow 救不回来。**注册表+重启 explorer 仅作兜底，两者别混用** |
 | `getFileIcon(.lnk)` | 拿不到真实图标 → 先解析 .lnk 目标再提取 |
 | 中文路径 | 编码问题 → 统一 UTF-8 |
 | 开机自启 | 测试任务计划方案时误删过 Run 键 → 只动 `HKCU\...\Run`，别碰任务计划 |
 | 广播 `WM_SETTINGCHANGE`/`SHChangeNotify` 隐藏桌面图标 | **隐藏生效、恢复失效**（切不回原生）→ 不可靠，别用；要隐藏图标就重启 explorer |
+| 从命令行启动打包版 exe 秒退 | 环境变量 `ELECTRON_RUN_AS_NODE=1` 会让 exe 被当 Node 跑 → 启动前 `Remove-Item Env:ELECTRON_RUN_AS_NODE`；双击 exe 不受影响 |
 
 ## 不要动
 
