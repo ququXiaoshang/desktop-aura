@@ -2,7 +2,15 @@
 
 一个 Windows 桌面美化工具：让桌面图标「灵动」起来——鼠标碰到图标就上浮，并支持收纳分组、壁纸毛玻璃质感。
 
-> 当前版本 **0.2.0**（阶段 A 完成）。绿色版 `dist\win-unpacked\灵动桌面Aura.exe` 双击可用。
+![Platform: Windows 10/11](https://img.shields.io/badge/Platform-Windows%2010%2F11-0078D4)
+![Electron 33](https://img.shields.io/badge/Electron-33-47848F)
+![License: MIT](https://img.shields.io/badge/License-MIT-22c55e)
+
+> 当前版本 **0.2.0**。Windows 10/11 x64，解压即用，无需安装任何运行库。
+
+## 下载
+
+👉 **[下载最新分发包](https://github.com/ququXiaoshang/desktop-aura/releases/latest)** —— 解压后双击 `灵动桌面Aura.exe` 即可使用。
 
 ---
 
