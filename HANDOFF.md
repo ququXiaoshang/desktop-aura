@@ -1,6 +1,6 @@
 # 交接快照
 
-> 更新于 **2026-10-19** ｜ 版本 0.2.0 ｜ 阶段 A + 切换流畅度优化完成
+> 更新于 **2026-10-20** ｜ 版本 0.2.0 ｜ 阶段 A + 切换流畅度优化 + 图标点击修复完成
 > 规矩：每完成一个能验证的里程碑，就更新本文档顶部日期 + 「下一步第一件事」，然后 commit 一次。
 
 ## 一句话现状
@@ -9,11 +9,12 @@
 唯一大项——单文件 exe 打包——因网络原因卡住，当前用绿色版目录分发。
 新增 `pnpm release`：把绿色版一键压成 `release\desktop-aura-<版本>-win-x64.zip`，可直接分发到其他 Windows x64 电脑（零依赖）。
 切模式优化已完成：改用 `ShowWindow` 隐藏/显示桌面 `SysListView32`（参考开源项目 KONEWS/DesktopIconToggle），不再重启 explorer —— 秒切、无白屏、任务栏不丢；注册表+重启 explorer 仅作兜底。
+图标点击已修复（2026-10-20）：`focusable:false` 的覆盖层收不到鼠标按键，改为显示完成后 `setFocusable(true)`。
 
 ## 已验证可用（能跑过）
 
 - [x] 图标悬停上浮 + 放大 + 投影 + 弹性缓动
-- [x] 点击图标启动对应程序
+- [x] 点击图标启动对应程序（2026-10-20 修复：`focusable:false` 的窗口收不到鼠标按键）
 - [x] 托盘一键切「灵动 / 原生」两套桌面，图标不重叠
 - [x] 鼠标穿透：图标以外区域不挡右键、不挡框选
 - [x] 复刻系统图标大小 / 间距 / 字体（自动读注册表）
@@ -52,6 +53,7 @@
 | 多屏未适配 | 只覆盖主屏，副屏不显示 |
 | 动态壁纸下的毛玻璃 | 用静态备份图，与实时画面略有差异 |
 | 毛玻璃为简化版 | 只做模糊，无实时折射 |
+| 点击会激活覆盖层 | 为了收到鼠标按键，灵动模式下窗口是可聚焦的；点击图标时窗口会被激活，理论上会短暂排到普通窗口之上（实测前台窗口仍在覆盖层之上，日常无感）。若以后发现图标盖住其他窗口，再补 z-order 复位 |
 
 ## 关键文件速查
 
@@ -74,3 +76,4 @@
 - **2026-10-17（安全兜底）**：新增 `scripts/restore-all.ps1` + 根目录 `还原桌面.bat`（应用没开也能一键还原：显示系统图标 + 清 `FWF_NOICONS` + 删自启 + 重启 explorer）；托盘加「彻底还原系统桌面并退出」。`zip-release.ps1` 会把还原入口一起打进 zip。另加 `使用说明.md` 随包分发。
 - **2026-10-19（切换流畅度 → 彻底解决）**：调研开源项目 [KONEWS/DesktopIconToggle](https://github.com/KONEWS/DesktopIconToggle)，确认不重启 explorer 的正道是 `ShowWindow` 隐藏桌面 `SysListView32`（注册表方案会**销毁** ListView，两者不能混用）。改动：`hide-icons.ps1` 改为「ShowWindow 优先 + 注册表兜底」；`main.js` 加窗口预热（0 透明度 show 一次防白屏）+ `backgroundThrottling:false`（首显图标即就绪）+ 首次显示强制重渲染。效果：切模式秒切、无白屏、任务栏不丢、开机第一次切换即正常。附带：新增 `scripts/test-showwindow.ps1`（诊断用）。
 - **2026-10-19（上 GitHub）**：代码推送到私有仓库 <https://github.com/ququXiaoshang/desktop-aura>（远程 `origin` 已配置）；创建 Release `v0.2.0` 并上传 `desktop-aura-0.2.0-win-x64.zip` —— <https://github.com/ququXiaoshang/desktop-aura/releases/tag/v0.2.0>。注意：本机网络需代理才能访问 GitHub 的下载 CDN；`gh` 便携版在 `C:\Users\LENOVO\.dsh\tools\gh\bin\gh.exe`，用前需设 `HTTPS_PROXY=http://127.0.0.1:7897/`。
+- **2026-10-20（图标点击修复）**：症状是灵动桌面里点图标没反应。定位：先单独验证 `shell.openPath` 打开 `.lnk` 正常（返回空、目标被拉起），排除启动链路；再用复刻窗口 + 程序注入真实鼠标事件做对照实验，确认 **`focusable:false` 的窗口能收到转发来的 mousemove（hover 正常），但收不到 mousedown/click**，换成可聚焦窗口就正常（不透明+不可聚焦同样点不动，排除透明因素）。修复：`applyAuraMode` 显示时先 `setFocusable(false)` 避免 `show()` 抢焦点，`showInactive()` 后再 `setFocusable(true)`；`set-rename-mode` 退出时恢复成 `systemIconsHidden`（否则重命名一次后图标又点不动）；`launch` 失败改为打日志不再静默。验证：重启绿色版后点击图标可正常启动。诊断脚本只放在临时目录，未入库。

@@ -497,14 +497,17 @@ function setAutoStart(enabled) {
 function applyAuraMode(enabled) {
   systemIconsHidden = enabled;
   if (enabled) {
-    // 立即显示灵动窗口：首次先用 show 强制渲染透明内容，延迟再转回不激活，
-    // 避免 showInactive 被后台节流、透明合成没跟上导致的白屏
+    // 显示期间先保持不可聚焦：show() 会给窗口焦点，可聚焦时会抢走当前应用的键盘焦点；
+    // 但 focusable:false 的窗口收不到鼠标按键（已验证：hover 有、click 没有），
+    // 所以显示完成后再解除聚焦限制，图标才能点得动。
     if (mainWindow) {
+      mainWindow.setFocusable(false);
       if (!mainWindow.isVisible()) {
         mainWindow.show();
         setTimeout(() => {
           if (mainWindow && !mainWindow.isDestroyed()) {
             mainWindow.showInactive();
+            mainWindow.setFocusable(true);
             // 首次显示时强制重渲染一次，避免开机第一次切换图标还没渲染出来（空桌面）
             if (!overlayShownOnce) {
               overlayShownOnce = true;
@@ -514,12 +517,16 @@ function applyAuraMode(enabled) {
         }, 160);
       } else {
         mainWindow.showInactive();
+        mainWindow.setFocusable(true);
       }
     }
     setSystemIconsVisible(false);
   } else {
     // 先隐藏灵动窗口，再恢复系统图标
-    if (mainWindow) mainWindow.hide();
+    if (mainWindow) {
+      mainWindow.setFocusable(false);
+      mainWindow.hide();
+    }
     setSystemIconsVisible(true);
   }
 }
@@ -634,7 +641,9 @@ ipcMain.on('save-groups', (e, groups) => {
 ipcMain.on('set-rename-mode', (e, on) => {
   if (!mainWindow) return;
   try {
-    mainWindow.setFocusable(!!on);
+    // 结束后要恢复成「灵动模式开 = 可聚焦」，不能一律设 false，
+    // 否则图标会退回「点不动」的状态
+    mainWindow.setFocusable(on ? true : systemIconsHidden);
     if (on) mainWindow.showInactive();
   } catch { /* 忽略 */ }
 });
@@ -647,7 +656,12 @@ ipcMain.on('set-interactive', (e, interactive) => {
 
 // 点击图标 → 启动对应程序
 ipcMain.on('launch', (e, p) => {
-  if (typeof p === 'string' && p) shell.openPath(p);
+  if (typeof p !== 'string' || !p) return;
+  shell.openPath(p)
+    .then((err) => {
+      if (err) console.error('[launch] 打开失败:', p, err);
+    })
+    .catch((err) => console.error('[launch] 异常:', p, err && err.message));
 });
 
 /* ---------- 启动 ---------- */

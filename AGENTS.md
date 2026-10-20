@@ -36,7 +36,8 @@ assets/          icon.png / icon.ico / tray.png（gen-icon.py 生成）
 assets/icon-cache/   图标缓存（生成物，已在 .gitignore）
 ```
 
-覆盖层窗口 = 透明无边框 + `showInactive()` + `focusable:false`；默认 `setIgnoreMouseEvents(true,{forward:true})`，
+覆盖层窗口 = 透明无边框 + `showInactive()`；创建时 `focusable:false`（避免 `show()` 抢焦点），
+**显示完成后必须 `setFocusable(true)`**，否则收不到鼠标按键、图标点不动。默认 `setIgnoreMouseEvents(true,{forward:true})`，
 渲染层在 `mousemove` 里做命中检测，鼠标进入图标或分组标题才切成可交互。
 
 ## 硬约束（改了会出问题）
@@ -57,6 +58,7 @@ assets/icon-cache/   图标缓存（生成物，已在 .gitignore）
 | 开机自启 | 测试任务计划方案时误删过 Run 键 → 只动 `HKCU\...\Run`，别碰任务计划 |
 | 广播 `WM_SETTINGCHANGE`/`SHChangeNotify` 隐藏桌面图标 | **隐藏生效、恢复失效**（切不回原生）→ 不可靠，别用；要隐藏图标就重启 explorer |
 | 从命令行启动打包版 exe 秒退 | 环境变量 `ELECTRON_RUN_AS_NODE=1` 会让 exe 被当 Node 跑 → 启动前 `Remove-Item Env:ELECTRON_RUN_AS_NODE`；双击 exe 不受影响 |
+| `focusable: false` 的覆盖层 | **收得到 hover、收不到鼠标按键**（实测：可复现 hover 正常但点击无反应）。要点击必须在显示完成后 `setFocusable(true)`；`show()` 前先设 false 以免抢焦点；退出重命名后按「灵动模式是否开启」恢复，不能一律设 false |
 
 ## 不要动
 
